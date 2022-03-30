@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Страницы{% endblock %}
+
+{% block content %}
+<div class="list-group pt-5">
+
+  {% for page in pages %}
+    <a href="{{ page.link }}" class="list-group-item list-group-item-action flex-column align-items-start" target="_blank">
+    <div class="d-flex w-100 justify-content-between">
+      <h5 class="mb-1">{{ page.title }}</h5>
+      <small>{{ page.parsed_at }}</small>
+    </div>
+    <small>{{ page.category }}</small>
+  </a>
+  {% endfor %}
+
+</div>
+
+<nav class="pt-4">
+  <ul class="pagination">
+    <li class="page-item {% if not pages.has_previous %} disabled {% endif %}">
+        <a {% if pages.has_previous %}href="?page={{ pages.previous_page_number }}{% endif %}"><span class="page-link">Назад</span></a>
+    </li>
+    <li class="page-item active">
+      <span class="page-link">
+        {{ pages.number }}
+      </span>
+    </li>
+    <li class="page-item {% if not pages.has_next %} disabled {% endif %}">
+      <a class="page-link" {% if pages.has_next %}href="?page={{ pages.next_page_number }}"{% endif %}>Вперёд</a>
+    </li>
+  </ul>
+</nav>
+
+<!--<div class="pagination">-->
+<!--    <span class="step-links">-->
+<!--        {% if pages.has_previous %}-->
+<!--            <a href="?page=1">&laquo; first</a>-->
+<!--            <a href="?page={{ pages.previous_page_number }}">previous</a>-->
+<!--        {% endif %}-->
+
+<!--        <span class="current">-->
+<!--            Page {{ pages.number }} of {{ pages.paginator.num_pages }}.-->
+<!--        </span>-->
+
+<!--        {% if pages.has_next %}-->
+<!--            <a href="?page={{ pages.next_page_number }}">next</a>-->
+<!--            <a href="?page={{ pages.paginator.num_pages }}">last &raquo;</a>-->
+<!--        {% endif %}-->
+<!--    </span>-->
+<!--</div>-->
+
+<style>
+.list-group-item-action:hover{
+    z-index: 2 !important;
+    color: #fff !important;
+    background-color: #0d6efd !important;
+    border-color: #0d6efd;
+}
+
+.list-group-item-action:hover .text-muted {
+    color: #fff !important;
+}
+</style>
+
+{% endblock %}

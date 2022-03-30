@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Анализ{% endblock %}
+
+{% block content %}
+    <div class="mx-auto" style="width: 700px;">
+        <p class="pt-5 pb-3">На этой странице представлены графики, анализирующие частотоность некоторых слов в разных сферах</p>
+
+        <canvas id="donut1" width="200" height="200"></canvas>
+
+        <p class="pt-3 pb-5">Pie-chart для 10 самых частотных слов</p>
+
+        <canvas id="donut2" width="200" height="200"></canvas>
+
+        <p class="pt-3 pb-5">Распределение встречаемости первых 10 самых частотных слов из политики</p>
+
+        <canvas id="frequency" width="200" height="200"></canvas>
+
+        <p class="pt-3 pb-5">Описание частотности для пяти слов в разных категориях</p>
+    </div>
+
+    {% for d in data %}
+        <input type="hidden" value="{{ d.dictionary }}" data-parsed="" data-category="{{ d.category }}" data-quantity="{{ d.quantity }}">
+    {% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js" integrity="sha512-QSkVNOCYLtj73J4hbmVoOV6KVZuMluZlioC+trLpewV8qMjsWqlIQvkn1KGX2StWvPMdWGBqim1xlC8krl1EKQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+
+    const data = document.querySelectorAll('input[data-parsed]');
+
+    var data_parsed = {};
+
+    const default_config = {
+      type: 'pie',
+      data: {
+            datasets: [{
+                data: [10, 20, 30],
+                backgroundColor: [
+                  'rgb(255, 99, 132)',
+                  'rgb(54, 162, 235)',
+                  'rgb(255, 205, 86)'
+                ],
+                hoverOffset: 4
+            }],
+
+            // These labels appear in the legend and in the tooltips when hovering different arcs
+            labels: [
+                'Red',
+                'Yellow',
+                'Blue'
+            ]
+        }
+    };
+
+
+    for (let i = 0; i < data.length; ++i) {
+        data_parsed[data[i].dataset.category] = {
+            'q': data[i].dataset.quantity,
+            'd': JSON.parse(data[i].value.replaceAll('\'','"'))
+        };
+    }
+
+    window.onload = () => {
+         const ctx = document.getElementById('donut1');
+         const ctx2 = document.getElementById('donut2');
+         const ctx3 = document.getElementById('frequency');
+
+         const donut1 = new Chart(ctx, default_config);
+         const donut2 = new Chart(ctx2, {
+          type: 'polarArea',
+          data: {
+                datasets: [{
+                    data: [10, 20, 30],
+                    backgroundColor: [
+                      'rgb(255, 99, 132, 0.5)',
+                      'rgb(54, 162, 235, 0.5)',
+                      'rgb(255, 205, 86, 0.5)'
+                    ],
+                    hoverOffset: 4
+                }],
+
+                // These labels appear in the legend and in the tooltips when hovering different arcs
+                labels: [
+                    'Red',
+                    'Yellow',
+                    'Blue'
+                ]
+            }
+        });
+
+        const frequency = new Chart(ctx3, {
+          type: 'line',
+          data: {
+                datasets: [{
+                    data: [10, 20, 30],
+                    backgroundColor: [
+                      'rgb(255, 99, 132, 0.5)',
+                      'rgb(54, 162, 235, 0.5)',
+                      'rgb(255, 205, 86, 0.5)'
+                    ],
+                    hoverOffset: 4
+                }],
+
+                // These labels appear in the legend and in the tooltips when hovering different arcs
+                labels: [
+                    'Red',
+                    'Yellow',
+                    'Blue'
+                ]
+            }
+        });
+
+         function addData(chart, label, data) {
+             chart.data.labels.push(label);
+             chart.data.datasets.forEach((dataset) => {
+                 dataset.data.push(data);
+             });
+             chart.update();
+         }
+
+         function removeData(chart) {
+             chart.data.labels = [];
+             chart.data.datasets.forEach((dataset) => {
+                 dataset.data = [];
+             });
+             chart.update();
+         }
+
+         function set_limited(chart, cat, count = 50) {
+             removeData(chart);
+             for (let i = 0; i < count && i < data_parsed[cat]['d'].length; ++i) {
+                 let k = Object.keys(data_parsed[cat]['d'][i])[0];
+                 addData(chart, k, data_parsed[cat]['d'][i][k]);
+             }
+         }
+
+         function set_linear(chart, count = 10) {
+            removeData(chart);
+
+            let data = [];
+            let labels = [];
+
+            for (let i = 0; i < Object.entries(data_parsed).length; ++i) {
+                labels.push(Object.entries(data_parsed)[i][0]);
+            }
+
+            for (let i = 0; i < count && i < data_parsed['all']['d'].length; ++i) {
+                let word = Object.keys(data_parsed['all']['d'][i]);
+                let arr = [];
+                for (const [key, value] of Object.entries(data_parsed)) {
+                  let k = 0;
+                  for (let j = 0; j < value['d'].length; ++j) {
+                    if (value['d'][j].hasOwnProperty(word)) {
+                        k = value['d'][j][word];
+                        break;
+                    }
+                  }
+
+                  if (value['q'] == 0) {
+                    arr.push(0);
+                  } else {
+                    arr.push(k / value['q']);
+                  }
+                }
+
+                data.push({
+                    'label': word,
+                    'data': arr,
+                    'fill': false,
+                    'borderColor': '#' + (Math.random().toString(16) + '000000').substring(2,8).toUpperCase(),
+                    'tension': 0.1
+                });
+            }
+
+            console.log(data);
+            chart.data.datasets = data;
+            chart.data.labels = labels;
+            chart.update();
+         }
+
+        set_limited(donut1, 'all', 10);
+        set_limited(donut2, 'politics', 10);
+        set_linear(frequency, 5);
+    };
+</script>
+{% endblock %}

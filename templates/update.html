@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %} Обновить {% endblock %}
+
+{% block content %}
+<div class="form-wrapper w-100 h-100 d-flex justify-content-center align-items-start pt-5">
+    <form action="{% url 'parse' %}" method="POST" class="col-5">
+        {% csrf_token %}
+
+        {% for field in form %}
+        <div class="form-group" style="margin-top: 200px;">
+            <p>Укажите количество страниц по 50 новостей</p>
+            <div class="mt-3">{{field}}</div>
+            {% if field.errors%}
+            {% for error in field.errors %}
+            <div class="alert alert-danger">
+                {{error}}
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+        {% endfor %}
+
+         <input type="submit" value="Обновить данные" class="btn btn-primary mt-3 d-block mx-auto">
+    </form>
+</div>
+{% endblock %}
